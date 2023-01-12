@@ -1,0 +1,56 @@
+name: Publish (HOYOVERSE)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    steps:
+      - name: Setup job variables
+        uses: allenevans/set-env@v2.0.1
+        with:
+          LAZARUS_VERSION: 2.2.2
+          FPC_VERSION: 3.2.2
+      - uses: actions/checkout@v3
+      - name: Get Lazarus dependencies
+        shell: bash
+        id: get-dependencies
+        run: echo "::set-output name=dependencies::$(node ./.github/workflows/scripts/getPackages.js)"
+      - name: Install Lazarus
+        uses: gcarreno/setup-lazarus@v3.2
+        with:
+          lazarus-version: ${{ env.LAZARUS_VERSION }}
+          include-packages: ${{ steps.get-dependencies.outputs.dependencies }}
+          with-cache: false
+      - name: Install 32bit compat
+        shell: bash
+        run: node ./.github/workflows/scripts/install32bitCompat.js
+#       - name: Build 32-Bit
+#         if: always()
+#         shell: cmd
+#         run: lazbuild --build-mode="Release 32-bit" --no-write-project "Cheat Engine/cheatengine.lpi"
+      - name: Build 64-Bit
+        if: always()
+        shell: cmd
+        run: lazbuild --build-mode="Release 64-bit" --no-write-project "Cheat Engine/cheatengine.lpi"
+      - name: Build 64-Bit O4 AVX2
+        if: always()
+        shell: cmd
+        run: lazbuild --build-mode="Release 64-bit O4 AVX2" --no-write-project "Cheat Engine/cheatengine.lpi"
+      - name: Removing unused files
+        shell: bash
+        run: |
+          find . -type f -name '*.dbg' -delete
+#       - name: Zip artifact
+#         if: always()
+#         shell: cmd
+#         run: 7z a -tzip release.zip * -r
+#         working-directory: "./Cheat Engine/bin"
+      - name: Upload latest artifact
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: Cheat Engine-release
+          path: ./Cheat Engine/bin/*
+          if-no-files-found: error

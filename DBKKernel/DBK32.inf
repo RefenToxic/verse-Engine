@@ -1,0 +1,79 @@
+;
+; HOYOVERSEEX32.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=System
+ClassGuid={4d36e97d-e325-11ce-bfc1-08002be10318}
+Provider=%ManufacturerName%
+CatalogFile=HOYOVERSEEX32.cat
+DriverVer= ; TODO: set DriverVer in stampinf property pages
+
+[DestinationDirs]
+DefaultDestDir = 12
+HOYOVERSEEX32_Device_CoInstaller_CopyFiles = 11
+
+; ================= Class section =====================
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+HOYOVERSEEX32.sys  = 1,,
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%HOYOVERSEEX32.DeviceDesc%=HOYOVERSEEX32_Device, Root\HOYOVERSEEX32 ; TODO: edit hw-id
+
+[HOYOVERSEEX32_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+HOYOVERSEEX32.sys
+
+;-------------- Service installation
+[HOYOVERSEEX32_Device.NT.Services]
+AddService = HOYOVERSEEX32,%SPSVCINST_ASSOCSERVICE%, HOYOVERSEEX32_Service_Inst
+
+; -------------- HOYOVERSEEX32 driver install sections
+[HOYOVERSEEX32_Service_Inst]
+DisplayName    = %HOYOVERSEEX32.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\HOYOVERSEEX32.sys
+
+;
+;--- HOYOVERSEEX32_Device Coinstaller installation ------
+;
+
+[HOYOVERSEEX32_Device.NT.CoInstallers]
+AddReg=HOYOVERSEEX32_Device_CoInstaller_AddReg
+CopyFiles=HOYOVERSEEX32_Device_CoInstaller_CopyFiles
+
+[HOYOVERSEEX32_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[HOYOVERSEEX32_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[HOYOVERSEEX32_Device.NT.Wdf]
+KmdfService =  HOYOVERSEEX32, HOYOVERSEEX32_wdfsect
+[HOYOVERSEEX32_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="HOYOVERSE EX" ;TODO: Replace with your manufacturer name
+ClassName="System" ; TODO: edit ClassName
+DiskName = "HOYOVERSEEX32 Installation Disk"
+HOYOVERSEEX32.DeviceDesc = "HOYOVERSEEX32 Device"
+HOYOVERSEEX32.SVCDESC = "HOYOVERSEEX32 Service"
