@@ -1,4 +1,4 @@
-name: Publish (HOYOVERSE)
+name: Publish ver.
 
 on:
   workflow_dispatch:
